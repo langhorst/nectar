@@ -194,7 +194,7 @@ func (s *Server) authorize(w http.ResponseWriter, r *http.Request) {
 		Issuer: s.cfg.Issuer, Audience: s.cfg.Issuer,
 		Scope: scope, ClientID: clientID, Kind: "code",
 		Challenge: challenge, Redirect: redirect,
-		Subject: "gogofhir-test-user",
+		Subject: "nectar-test-user",
 	}
 	if wantsPatientContext(scope) {
 		claims.Patient = s.cfg.Patient

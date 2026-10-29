@@ -167,7 +167,7 @@ func bearerToken(r *http.Request) (string, bool) {
 // rather than guessing why it was refused.
 func (s *Server) unauthorized(w http.ResponseWriter, r *http.Request, code, description string) {
 	w.Header().Set("WWW-Authenticate",
-		`Bearer realm="gogofhir", error="`+code+`", error_description="`+description+`"`)
+		`Bearer realm="nectar", error="`+code+`", error_description="`+description+`"`)
 	s.write(w, r, http.StatusUnauthorized, outcome(s.index, Issue{
 		Severity: severityError, Code: "login", Diagnostics: description,
 	}), nil)

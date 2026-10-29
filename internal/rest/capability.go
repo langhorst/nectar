@@ -55,11 +55,11 @@ func (s *Server) capabilityStatement(r *http.Request) (*resource.Node, error) {
 		"date":         time.Now().UTC().Format("2006-01-02T15:04:05Z07:00"),
 		"kind":         "instance",
 		"software": map[string]any{
-			"name":    "gogofhir",
+			"name":    "Nectar",
 			"version": softwareVersion,
 		},
 		"implementation": map[string]any{
-			"description": "gogofhir development and conformance server",
+			"description": "Nectar development and conformance server",
 			"url":         s.base(r),
 		},
 		"fhirVersion": s.index.FHIRVersion,

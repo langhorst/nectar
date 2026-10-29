@@ -75,7 +75,7 @@ func runServe(args []string) int {
 		"reject a create or update whose resource has validation errors")
 	smartAuth := fs.Bool("smart", false,
 		"require SMART App Launch access tokens and enforce their scopes")
-	smartClient := fs.String("smart-client", "gogofhir-test-client",
+	smartClient := fs.String("smart-client", "nectar-test-client",
 		"client id registered with the built-in authorization server")
 	smartSecret := fs.String("smart-secret", "",
 		"client secret; empty registers a public client, which must use PKCE")

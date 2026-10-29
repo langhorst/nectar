@@ -66,11 +66,11 @@ type Claims struct {
 	ClientID string `json:"client_id,omitempty"`
 	// Kind separates access tokens from refresh tokens and authorization
 	// codes, so one cannot be presented where another is expected.
-	Kind string `json:"gogofhir_kind,omitempty"`
+	Kind string `json:"nectar_kind,omitempty"`
 	// Challenge carries a PKCE code challenge on an authorization code, so the
 	// code and its verifier travel together without server-side state.
-	Challenge string `json:"gogofhir_challenge,omitempty"`
-	Redirect  string `json:"gogofhir_redirect,omitempty"`
+	Challenge string `json:"nectar_challenge,omitempty"`
+	Redirect  string `json:"nectar_redirect,omitempty"`
 }
 
 // Sign issues a token.

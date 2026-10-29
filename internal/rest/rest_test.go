@@ -632,6 +632,9 @@ func TestCapabilityStatement(t *testing.T) {
 	if statement["fhirVersion"] != "5.0.0" {
 		t.Errorf("fhirVersion = %v, want 5.0.0", statement["fhirVersion"])
 	}
+	if software, _ := statement["software"].(map[string]any); software["name"] != "Nectar" {
+		t.Errorf("software.name = %v, want Nectar", software["name"])
+	}
 	restEntries, _ := statement["rest"].([]any)
 	server, _ := restEntries[0].(map[string]any)
 	resources, _ := server["resource"].([]any)
