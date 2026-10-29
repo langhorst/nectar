@@ -48,7 +48,7 @@ func withSMART(auth *smart.Server) option {
 
 // newServer starts a server on a fresh backend.
 //
-// Which backend depends on GOGOFHIR_TEST_POSTGRES: unset, every test runs on an
+// Which backend depends on NECTAR_TEST_POSTGRES: unset, every test runs on an
 // in-memory SQLite database, and set, the identical suite runs against
 // PostgreSQL. That is the parity gate at its widest -- not the storage layer
 // alone but the whole server, since a divergence that only shows through a
@@ -100,7 +100,7 @@ var schemaCounter atomic.Int64
 
 func newBackend(t *testing.T, idx *conformance.Index) storage.Backend {
 	t.Helper()
-	dsn := os.Getenv("GOGOFHIR_TEST_POSTGRES")
+	dsn := os.Getenv("NECTAR_TEST_POSTGRES")
 	if dsn == "" {
 		store, err := sqlite.Open(":memory:", idx)
 		if err != nil {
@@ -110,7 +110,7 @@ func newBackend(t *testing.T, idx *conformance.Index) storage.Backend {
 		return store
 	}
 
-	schema := fmt.Sprintf("gogofhir_rest_%d", schemaCounter.Add(1))
+	schema := fmt.Sprintf("nectar_rest_%d", schemaCounter.Add(1))
 	admin, err := postgres.Open(dsn, idx)
 	if err != nil {
 		t.Fatalf("connecting to PostgreSQL: %v", err)

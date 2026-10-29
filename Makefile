@@ -46,9 +46,9 @@ test-race: ## Run all tests with the race detector
 	$(GO) test -race $(PKGS)
 
 check-parity: ## Run the storage and REST suites against PostgreSQL as well
-	@if [ -z "$$GOGOFHIR_TEST_POSTGRES" ]; then \
-		echo "GOGOFHIR_TEST_POSTGRES is not set; the PostgreSQL half of the parity gate cannot run."; \
-		echo "  e.g. GOGOFHIR_TEST_POSTGRES='postgres://user@host:5432/db?sslmode=disable' make check-parity"; \
+	@if [ -z "$$NECTAR_TEST_POSTGRES" ]; then \
+		echo "NECTAR_TEST_POSTGRES is not set; the PostgreSQL half of the parity gate cannot run."; \
+		echo "  e.g. NECTAR_TEST_POSTGRES='postgres://user@host:5432/db?sslmode=disable' make check-parity"; \
 		exit 1; \
 	fi
 	$(GO) test ./internal/storage/... ./internal/rest/...
@@ -76,8 +76,8 @@ vet: ## Run go vet
 lint: fmt-check vet ## Formatting check + vet
 
 check: lint test-race ## The pre-push gate: lint + race tests
-	@if [ -n "$$GOGOFHIR_TEST_POSTGRES" ]; then $(MAKE) check-parity; else \
-		echo "note: GOGOFHIR_TEST_POSTGRES unset, so the suites ran on SQLite only (see check-parity)"; \
+	@if [ -n "$$NECTAR_TEST_POSTGRES" ]; then $(MAKE) check-parity; else \
+		echo "note: NECTAR_TEST_POSTGRES unset, so the suites ran on SQLite only (see check-parity)"; \
 	fi
 
 clean: ## Remove build artifacts and runtime state

@@ -366,10 +366,10 @@ func TestOfficialFHIRPathSuites(t *testing.T) {
 			if len(res.failed) > 0 {
 				sort.Strings(res.failed)
 				// Truncated by default so a broad regression does not bury the
-				// summary; GOGOFHIR_SUITE_ALL=1 prints every failure, which is
+				// summary; NECTAR_SUITE_ALL=1 prints every failure, which is
 				// what you want while working through them.
 				shown := res.failed
-				if os.Getenv("GOGOFHIR_SUITE_ALL") == "" && len(shown) > 40 {
+				if os.Getenv("NECTAR_SUITE_ALL") == "" && len(shown) > 40 {
 					shown = shown[:40]
 				}
 				for _, f := range shown {

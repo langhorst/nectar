@@ -29,9 +29,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: gogofhir
-          POSTGRES_PASSWORD: gogofhir
-          POSTGRES_DB: gogofhir
+          POSTGRES_USER: nectar
+          POSTGRES_PASSWORD: nectar
+          POSTGRES_DB: nectar
         ports: ['5432:5432']
         options: >-
           --health-cmd pg_isready --health-interval 5s
@@ -47,7 +47,7 @@ jobs:
       # document or a bug to fix, and this is the job that finds out.
       - run: make check-parity
         env:
-          GOGOFHIR_TEST_POSTGRES: postgres://gogofhir:gogofhir@localhost:5432/gogofhir?sslmode=disable
+          NECTAR_TEST_POSTGRES: postgres://nectar:nectar@localhost:5432/nectar?sslmode=disable
 
   generated:
     name: conformance indexes are current

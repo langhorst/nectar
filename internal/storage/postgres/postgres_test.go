@@ -16,11 +16,11 @@ import (
 
 // The storage conformance suite, on PostgreSQL.
 //
-// It needs a server, named by GOGOFHIR_TEST_POSTGRES. Without one the suite
+// It needs a server, named by NECTAR_TEST_POSTGRES. Without one the suite
 // skips rather than fails: a contributor without PostgreSQL installed should
 // still be able to run `make check`, and CI supplies the variable. The skip
 // says so out loud, because a silently skipped parity gate is not a gate.
-const dsnEnv = "GOGOFHIR_TEST_POSTGRES"
+const dsnEnv = "NECTAR_TEST_POSTGRES"
 
 // schemaCounter gives each backend its own schema, so the suite's assumption
 // that every Open yields an empty database holds without dropping and
@@ -42,7 +42,7 @@ func TestConformance(t *testing.T) {
 // search_path at it.
 func openInFreshSchema(t *testing.T, dsn string) storage.Backend {
 	t.Helper()
-	schema := fmt.Sprintf("gogofhir_test_%d", schemaCounter.Add(1))
+	schema := fmt.Sprintf("nectar_test_%d", schemaCounter.Add(1))
 
 	admin, err := postgres.Open(dsn, conformance.MustLoad(conformance.R5))
 	if err != nil {

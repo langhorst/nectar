@@ -515,7 +515,7 @@ suite can miss.
 
 ```sh
 make check          # SQLite, and says so
-GOGOFHIR_TEST_POSTGRES='postgres://user@host:5432/db?sslmode=disable' \
+NECTAR_TEST_POSTGRES='postgres://user@host:5432/db?sslmode=disable' \
   make check-parity # both engines, the identical assertions
 ```
 
@@ -633,7 +633,7 @@ groups:
 Ten R5 cases are skipped rather than diverged: they exercise CDA documents,
 a terminology server, and the `htmlChecks()` hook, none of which are FHIRPath.
 
-Set `GOGOFHIR_SUITE_ALL=1` to print every failure instead of the first forty.
+Set `NECTAR_SUITE_ALL=1` to print every failure instead of the first forty.
 
 ### Beyond the suite
 
