@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/storage"
-	"github.com/langhorst/gogofhir/internal/storage/postgres"
-	"github.com/langhorst/gogofhir/internal/storage/storagetest"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/storage"
+	"github.com/langhorst/nectar/internal/storage/postgres"
+	"github.com/langhorst/nectar/internal/storage/storagetest"
 )
 
 // The storage conformance suite, on PostgreSQL.

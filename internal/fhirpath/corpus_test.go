@@ -4,8 +4,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/fhirpath"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/fhirpath"
 )
 
 // The compiled conformance indexes carry every FHIRPath expression the

@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/smart"
-	"github.com/langhorst/gogofhir/internal/storage"
-	"github.com/langhorst/gogofhir/internal/validate"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/smart"
+	"github.com/langhorst/nectar/internal/storage"
+	"github.com/langhorst/nectar/internal/validate"
 )
 
 const (

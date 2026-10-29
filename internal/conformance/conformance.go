@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/langhorst/gogofhir/internal/conformance/model"
+	"github.com/langhorst/nectar/internal/conformance/model"
 )
 
 //go:embed data

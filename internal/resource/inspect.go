@@ -3,7 +3,7 @@ package resource
 import (
 	"sort"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
+	"github.com/langhorst/nectar/internal/conformance"
 )
 
 // Inspection: what a document holds at a node, measured against what the

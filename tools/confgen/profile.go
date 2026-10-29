@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance/model"
+	"github.com/langhorst/nectar/internal/conformance/model"
 )
 
 // Compiling profiles.

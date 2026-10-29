@@ -9,8 +9,8 @@ package rest
 import (
 	"net/http"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
 )
 
 const (

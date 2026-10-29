@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/langhorst/gogofhir/internal/storage"
-	"github.com/langhorst/gogofhir/internal/storage/index"
+	"github.com/langhorst/nectar/internal/storage"
+	"github.com/langhorst/nectar/internal/storage/index"
 )
 
 // Query execution.

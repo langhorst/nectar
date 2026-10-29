@@ -3,10 +3,10 @@ package sqlite_test
 import (
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/storage"
-	"github.com/langhorst/gogofhir/internal/storage/sqlite"
-	"github.com/langhorst/gogofhir/internal/storage/storagetest"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/storage"
+	"github.com/langhorst/nectar/internal/storage/sqlite"
+	"github.com/langhorst/nectar/internal/storage/storagetest"
 )
 
 // The storage conformance suite, on SQLite. The same suite runs against

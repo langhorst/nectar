@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/validate"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/validate"
 )
 
 // The corpus gate: every published example resource is validated, and the

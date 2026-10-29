@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/validate"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/validate"
 )
 
 func check(t *testing.T, doc string, configure ...func(*validate.Validator)) []validate.Issue {

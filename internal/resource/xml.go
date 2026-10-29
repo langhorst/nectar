@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
+	"github.com/langhorst/nectar/internal/conformance"
 )
 
 // FHIR XML is the same information model as FHIR JSON in a different shape:

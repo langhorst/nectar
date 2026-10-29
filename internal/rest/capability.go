@@ -5,8 +5,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/storage/index"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/storage/index"
 )
 
 // The CapabilityStatement is generated from the conformance index rather than

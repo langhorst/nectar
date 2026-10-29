@@ -3,7 +3,7 @@ package conformance_test
 import (
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
+	"github.com/langhorst/nectar/internal/conformance"
 )
 
 // The assertions here are facts about the FHIR specification, not about this

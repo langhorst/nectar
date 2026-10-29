@@ -1,4 +1,4 @@
-module github.com/langhorst/gogofhir
+module github.com/langhorst/nectar
 
 go 1.25.0
 

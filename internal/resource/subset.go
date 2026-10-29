@@ -3,7 +3,7 @@ package resource
 import (
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
+	"github.com/langhorst/nectar/internal/conformance"
 )
 
 // Subsetting a resource for _summary and _elements.

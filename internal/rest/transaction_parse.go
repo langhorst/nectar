@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/resource"
 	"net/http"
 	"net/url"
 )

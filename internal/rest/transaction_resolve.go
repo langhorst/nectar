@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/storage"
+	"github.com/langhorst/nectar/internal/storage"
 	"net/http"
 )
 

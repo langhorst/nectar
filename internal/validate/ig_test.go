@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/validate"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/validate"
 )
 
 // Profiles from a vendored implementation guide, exercised against the

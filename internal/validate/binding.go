@@ -3,8 +3,8 @@ package validate
 import (
 	"fmt"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
 )
 
 // Bindings: checking coded values against the value sets an element names.

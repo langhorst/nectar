@@ -26,8 +26,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
 )
 
 // Severities, matching the OperationOutcome value set.

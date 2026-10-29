@@ -22,9 +22,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/fhirpath"
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/fhirpath"
+	"github.com/langhorst/nectar/internal/resource"
 )
 
 // The parameter's declared type decides how a selected value is indexed, and

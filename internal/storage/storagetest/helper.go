@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/fhirpath"
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/fhirpath"
+	"github.com/langhorst/nectar/internal/resource"
 )
 
 // eval evaluates a FHIRPath expression against a stored document and joins the

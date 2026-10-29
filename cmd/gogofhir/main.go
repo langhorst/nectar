@@ -27,12 +27,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/rest"
-	"github.com/langhorst/gogofhir/internal/smart"
-	"github.com/langhorst/gogofhir/internal/storage/postgres"
-	"github.com/langhorst/gogofhir/internal/storage/sqlite"
-	"github.com/langhorst/gogofhir/internal/storage/sqlstore"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/rest"
+	"github.com/langhorst/nectar/internal/smart"
+	"github.com/langhorst/nectar/internal/storage/postgres"
+	"github.com/langhorst/nectar/internal/storage/sqlite"
+	"github.com/langhorst/nectar/internal/storage/sqlstore"
 )
 
 // version is stamped at release time with -ldflags "-X main.version=...".

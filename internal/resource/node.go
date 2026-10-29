@@ -16,8 +16,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/fhirpath"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/fhirpath"
 )
 
 // Node is one element of a document. It implements fhirpath.Node.

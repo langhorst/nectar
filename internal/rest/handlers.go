@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/storage"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/storage"
 )
 
 // The RESTful interactions.

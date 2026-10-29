@@ -3,9 +3,9 @@ package validate
 import (
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/fhirpath"
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/fhirpath"
+	"github.com/langhorst/nectar/internal/resource"
 )
 
 // Invariants: the FHIRPath constraints the specification attaches to types and

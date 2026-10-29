@@ -17,10 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/storage"
-	"github.com/langhorst/gogofhir/internal/storage/index"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/storage"
+	"github.com/langhorst/nectar/internal/storage/index"
 )
 
 // Open is how a suite gets a fresh, empty backend. Each call must return a

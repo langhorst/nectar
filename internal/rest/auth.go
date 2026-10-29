@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/smart"
+	"github.com/langhorst/nectar/internal/smart"
 )
 
 // The resource server half of SMART: what a request may do, given the token it

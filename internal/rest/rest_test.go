@@ -11,12 +11,12 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/rest"
-	"github.com/langhorst/gogofhir/internal/smart"
-	"github.com/langhorst/gogofhir/internal/storage"
-	"github.com/langhorst/gogofhir/internal/storage/postgres"
-	"github.com/langhorst/gogofhir/internal/storage/sqlite"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/rest"
+	"github.com/langhorst/nectar/internal/smart"
+	"github.com/langhorst/nectar/internal/storage"
+	"github.com/langhorst/nectar/internal/storage/postgres"
+	"github.com/langhorst/nectar/internal/storage/sqlite"
 )
 
 // End-to-end tests over a real HTTP server and a real database. Nothing is

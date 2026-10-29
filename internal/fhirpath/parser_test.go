@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/fhirpath"
+	"github.com/langhorst/nectar/internal/fhirpath"
 )
 
 // Round-tripping through Expr.String is how these tests assert structure:

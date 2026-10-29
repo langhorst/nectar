@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/storage"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/storage"
 	"net/http"
 )
 

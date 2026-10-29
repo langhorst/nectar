@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/storage"
-	"github.com/langhorst/gogofhir/internal/storage/index"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/storage"
+	"github.com/langhorst/nectar/internal/storage/index"
 )
 
 // _filter, the one FHIR search parameter that carries its own query language.

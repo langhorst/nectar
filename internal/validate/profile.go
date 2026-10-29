@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/resource"
 )
 
 // Profile validation.

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/resource"
-	"github.com/langhorst/gogofhir/internal/validate"
+	"github.com/langhorst/nectar/internal/resource"
+	"github.com/langhorst/nectar/internal/validate"
 )
 
 // The $validate operation, and validation on write.

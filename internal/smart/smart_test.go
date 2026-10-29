@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/smart"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/smart"
 )
 
 // Scopes, tokens and PKCE, tested at the unit level: the REST suite exercises

@@ -3,9 +3,9 @@ package resource_test
 import (
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/fhirpath"
-	"github.com/langhorst/gogofhir/internal/resource"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/fhirpath"
+	"github.com/langhorst/nectar/internal/resource"
 )
 
 // eval is a small helper: parse an expression, evaluate it against a document,

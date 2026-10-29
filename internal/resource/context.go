@@ -3,8 +3,8 @@ package resource
 import (
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/fhirpath"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/fhirpath"
 )
 
 // NewContext builds a FHIRPath evaluation context backed by the conformance

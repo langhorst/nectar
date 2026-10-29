@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance/model"
+	"github.com/langhorst/nectar/internal/conformance/model"
 )
 
 // Compiling value sets.

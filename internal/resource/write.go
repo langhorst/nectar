@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
+	"github.com/langhorst/nectar/internal/conformance"
 )
 
 // Serialization back to both wire formats.

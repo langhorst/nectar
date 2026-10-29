@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/langhorst/gogofhir/internal/smart"
+	"github.com/langhorst/nectar/internal/smart"
 )
 
 // SMART App Launch, end to end: discovery, the authorization code flow with

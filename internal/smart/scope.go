@@ -12,7 +12,7 @@ package smart
 import (
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
+	"github.com/langhorst/nectar/internal/conformance"
 )
 
 // Scope is one SMART scope: who is asking, about what, and what they may do.

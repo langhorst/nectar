@@ -25,7 +25,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/langhorst/gogofhir/internal/conformance/model"
+	"github.com/langhorst/nectar/internal/conformance/model"
 )
 
 func main() {

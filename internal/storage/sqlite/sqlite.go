@@ -19,8 +19,8 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/langhorst/gogofhir/internal/conformance"
-	"github.com/langhorst/gogofhir/internal/storage/sqlstore"
+	"github.com/langhorst/nectar/internal/conformance"
+	"github.com/langhorst/nectar/internal/storage/sqlstore"
 )
 
 //go:embed migrations/*.sql
