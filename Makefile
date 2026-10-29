@@ -1,7 +1,7 @@
 # gogofhir — build, run, and test.
 # `make` (or `make help`) lists targets; `make check` is the pre-push gate.
 
-BIN     := bin/gogofhir
+BIN     := bin/nectar
 GO      := go
 PKGS    := ./...
 FHIRVERSIONS := r4 r5
@@ -14,11 +14,11 @@ FHIRVERSIONS := r4 r5
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: ## Build the gogofhir binary into bin/
-	$(GO) build -o $(BIN) ./cmd/gogofhir
+build: ## Build the nectar binary into bin/
+	$(GO) build -o $(BIN) ./cmd/nectar
 
 release: ## Build a stripped, trimmed release binary
-	$(GO) build -trimpath -ldflags '-s -w' -o $(BIN) ./cmd/gogofhir
+	$(GO) build -trimpath -ldflags '-s -w' -o $(BIN) ./cmd/nectar
 
 run: build ## Summarize the embedded conformance index (the REST server lands in M2)
 	./$(BIN) conformance

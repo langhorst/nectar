@@ -1,4 +1,4 @@
-// Command gogofhir is the FHIR server daemon.
+// Command nectar is the FHIR server daemon.
 //
 // "serve" runs the RESTful server on SQLite or PostgreSQL; "conformance"
 // summarizes the embedded index for a release, which is the smoke test that
@@ -6,11 +6,11 @@
 //
 // Usage:
 //
-//	gogofhir serve       [-fhir r5] [-addr :8080] [-db fhir.db | postgres://...]
-//	                     [-validate-writes] [-strict-terminology]
-//	                     [-smart -base-url https://host]
-//	gogofhir conformance [-fhir r5]
-//	gogofhir version
+//	nectar serve       [-fhir r5] [-addr :8080] [-db fhir.db | postgres://...]
+//	                   [-validate-writes] [-strict-terminology]
+//	                   [-smart -base-url https://host]
+//	nectar conformance [-fhir r5]
+//	nectar version
 package main
 
 import (
@@ -49,7 +49,7 @@ func main() {
 	var code int
 	switch cmd {
 	case "version":
-		fmt.Printf("gogofhir %s\n", version)
+		fmt.Printf("nectar %s\n", version)
 	case "conformance":
 		code = runConformance(args)
 	case "serve":
@@ -66,7 +66,7 @@ func runServe(args []string) int {
 	fs := flag.NewFlagSet("serve", flag.ExitOnError)
 	release := fs.String("fhir", string(conformance.R5), "FHIR release to serve (r4, r5)")
 	addr := fs.String("addr", ":8080", "address to listen on")
-	dbPath := fs.String("db", "gogofhir.db",
+	dbPath := fs.String("db", "nectar.db",
 		`SQLite database path, ":memory:" for an ephemeral one, or a postgres:// URL`)
 	baseURL := fs.String("base-url", "", "external base URL, when behind a proxy")
 	strictTerminology := fs.Bool("strict-terminology", false,
@@ -152,7 +152,7 @@ func runServe(args []string) int {
 	defer stop()
 
 	go func() {
-		log.Info("gogofhir listening",
+		log.Info("nectar listening",
 			"addr", *addr, "release", idx.Release, "fhirVersion", idx.FHIRVersion,
 			"resourceTypes", len(idx.ResourceTypes()), "engine", store.Engine())
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

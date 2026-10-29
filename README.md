@@ -7,7 +7,7 @@ behaves.
 
 The name is a Dhalsim joke. Go for Go, go for let's go, fhir for FHIR.
 
-> **Status: M7 complete.** `gogofhir serve` gives you CRUD, versioning,
+> **Status: M7 complete.** `nectar serve` gives you CRUD, versioning,
 > history, conditional operations, optimistic concurrency, atomic transaction
 > and batch bundles, the whole of search — every indexed parameter type with its
 > modifiers, full-text, chaining, `_has`, `_include`/`_revinclude`, composites,
@@ -59,7 +59,7 @@ code outside `internal/conformance` knows which release it is serving.
 
 ```sh
 make build                            # no network, no vendored packages needed
-./bin/gogofhir serve -db :memory:     # or -db fhir.db to keep the data
+./bin/nectar serve -db :memory:       # or -db fhir.db to keep the data
 
 # Stricter, for a conformance run:
 #   -validate-writes       refuse resources with validation errors
@@ -78,7 +78,7 @@ curl -H 'Accept: application/fhir+xml' localhost:8080/Patient/<id>
 curl localhost:8080/metadata                               # CapabilityStatement
 ```
 
-`./bin/gogofhir conformance -fhir r5` summarizes the embedded index instead:
+`./bin/nectar conformance -fhir r5` summarizes the embedded index instead:
 
 ```
 release        r5 (5.0.0)
@@ -386,7 +386,7 @@ because a conformance target that only pretends to authorize is worse than one
 that does not try.
 
 ```sh
-gogofhir serve -smart -base-url https://fhir.example.org   -smart-client my-app -smart-redirect https://app.example.org/redirect   -smart-patient 1a2b3c
+nectar serve -smart -base-url https://fhir.example.org   -smart-client my-app -smart-redirect https://app.example.org/redirect   -smart-patient 1a2b3c
 ```
 
 - **Discovery.** `.well-known/smart-configuration` and, in the
@@ -663,7 +663,7 @@ what the design rests on.
 ## Layout
 
 ```
-cmd/gogofhir/            daemon
+cmd/nectar/              daemon
 internal/conformance/    embedded compiled index + loader
 internal/conformance/model/  index types, importable by the generator
 internal/fhirpath/       lexer, parser, evaluator, function library
