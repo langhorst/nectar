@@ -722,3 +722,18 @@ make cover    # race tests with a coverage summary
 ```
 
 `make help` lists everything.
+
+## License
+
+Nectar is released under the [MIT License](LICENSE).
+
+Two kinds of HL7 content ship with it. Both are published under CC0-1.0 and
+keep that dedication:
+
+- the conformance packages compiled into the embedded indexes, listed under
+  [Where the packages come from](#where-the-packages-come-from);
+- the FHIRPath conformance suites in `internal/fhirpath/testdata`, from
+  `FHIR/fhir-test-cases` at the commit pinned in `third_party/packages.lock`.
+
+Some of that content refers to codes from external terminologies such as LOINC,
+SNOMED CT and UCUM, which their owners license separately.
