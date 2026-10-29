@@ -1,11 +1,9 @@
-# gogofhir
+# Nectar
 
 A FHIR server in Go — a dev/test server and conformance target. One static
 binary, an embedded conformance package, and a SQLite file: run it with no
 dependencies, point a FHIR client at it, and run it in CI to prove that client
 behaves.
-
-The name is a Dhalsim joke. Go for Go, go for let's go, fhir for FHIR.
 
 > **Status: M7 complete.** `nectar serve` gives you CRUD, versioning,
 > history, conditional operations, optimistic concurrency, atomic transaction

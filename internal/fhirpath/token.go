@@ -2,7 +2,7 @@
 // specification uses for search parameter extraction, invariants, _filter, and
 // subscription criteria.
 //
-// It is the keystone of gogofhir: because resources are stored as untyped JSON
+// It is the keystone of Nectar: because resources are stored as untyped JSON
 // documents rather than generated structs, essentially every question the
 // server asks about a resource's contents is asked in FHIRPath. The package is
 // deliberately free of dependencies on the rest of the server so it can be

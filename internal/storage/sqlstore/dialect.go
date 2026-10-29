@@ -9,7 +9,7 @@ import (
 
 // The engine seam.
 //
-// gogofhir has one SQL implementation, not two. Everything below this file --
+// Nectar has one SQL implementation, not two. Everything below this file --
 // versioning, history, index extraction, the whole query renderer -- is shared,
 // and a Dialect supplies only what the engines genuinely do differently. That
 // is the point: a second backend written alongside the first is how a

@@ -1,7 +1,7 @@
 // Package resource holds FHIR resources as untyped documents and exposes them
 // to FHIRPath.
 //
-// Because gogofhir generates no Go structs for resource types, a document is
+// Because Nectar generates no Go structs for resource types, a document is
 // just decoded JSON -- maps, slices, and scalars -- and all of its meaning comes
 // from the conformance index. This package joins the two: it wraps a decoded
 // document in nodes that answer what element they are, what FHIR type that

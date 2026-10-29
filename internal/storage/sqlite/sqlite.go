@@ -1,4 +1,4 @@
-// Package sqlite runs gogofhir's storage on SQLite.
+// Package sqlite runs Nectar's storage on SQLite.
 //
 // It is the default backend: a dataset is one file a developer can copy, reset,
 // or commit as a fixture, and the server needs no database to run.

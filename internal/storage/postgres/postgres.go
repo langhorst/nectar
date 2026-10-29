@@ -1,4 +1,4 @@
-// Package postgres runs gogofhir's storage on PostgreSQL.
+// Package postgres runs Nectar's storage on PostgreSQL.
 //
 // It is the backend for deployments that need real concurrency: SQLite allows
 // one writer at a time, which is a documented limit rather than a bug, and this

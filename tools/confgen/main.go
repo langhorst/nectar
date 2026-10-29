@@ -7,7 +7,7 @@
 // the search parameters, the compartments, and the invariants, and discards the
 // rest.
 //
-// Its output is committed, so building gogofhir requires neither the packages
+// Its output is committed, so building Nectar requires neither the packages
 // nor a network. `make gen-check` fails the build if the committed output
 // drifts from what the pinned packages produce.
 //

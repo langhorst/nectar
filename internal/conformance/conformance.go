@@ -1,7 +1,7 @@
 // Package conformance loads the compiled FHIR conformance index for a release.
 //
 // The index itself is defined in the model subpackage; this package owns the
-// generated data and the embedding of it. Building gogofhir needs neither the
+// generated data and the embedding of it. Building Nectar needs neither the
 // published packages nor a network: tools/confgen reduces them to the files
 // under data/, which are committed.
 //

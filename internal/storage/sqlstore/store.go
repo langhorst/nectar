@@ -1,6 +1,6 @@
 // Package sqlstore implements storage.Backend over SQL.
 //
-// It is the whole implementation for every engine gogofhir supports. What the
+// It is the whole implementation for every engine Nectar supports. What the
 // engines do differently is supplied through a Dialect -- placeholder syntax,
 // how an insert reports its surrogate key, full-text search, and the DDL -- and
 // nothing else is duplicated. A second backend written alongside the first is

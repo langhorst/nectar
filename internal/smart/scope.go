@@ -1,7 +1,7 @@
 // Package smart implements SMART App Launch: the authorization layer a FHIR
 // server needs before anyone will point a real app at it.
 //
-// It is off unless asked for. gogofhir exists to be developed against, and a
+// It is off unless asked for. Nectar exists to be developed against, and a
 // server that demands an access token before it will answer `GET /Patient` is
 // one a developer spends the first afternoon working around. Turned on, it is
 // the whole flow -- discovery, authorization with PKCE, tokens, scopes, and

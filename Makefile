@@ -1,4 +1,4 @@
-# gogofhir — build, run, and test.
+# Nectar — build, run, and test.
 # `make` (or `make help`) lists targets; `make check` is the pre-push gate.
 
 BIN     := bin/nectar

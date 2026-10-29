@@ -36,7 +36,7 @@ func (r Release) Valid() bool { return r == R4 || r == R5 }
 
 // Index is the compiled conformance data for one FHIR release.
 //
-// gogofhir stores resources as untyped JSON documents rather than generated Go
+// Nectar stores resources as untyped JSON documents rather than generated Go
 // structs, so this index supplies every piece of knowledge a generated type
 // would otherwise carry: which elements a resource has, how they are typed,
 // which are choice elements, what a search parameter selects, and which
