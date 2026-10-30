@@ -315,6 +315,12 @@ func (s *Server) readResource(w http.ResponseWriter, r *http.Request) (*resource
 	} else {
 		node, err = resource.FromJSON(s.index, body)
 	}
+	if err == nil {
+		// Checked here, on the way in, rather than in the readers: stored
+		// documents go through FromJSON too, and a limit introduced later must
+		// not make something already stored unreadable.
+		err = resource.CheckDepth(node)
+	}
 	if err != nil {
 		s.fail(w, r, http.StatusBadRequest, "cannot parse resource: %v", err)
 		return nil, false

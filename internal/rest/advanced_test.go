@@ -360,6 +360,62 @@ func TestFilterErrors(t *testing.T) {
 	}
 }
 
+// A _filter is client input with its own grammar, so its size is bounded:
+// nesting deep enough once overflowed the parser's stack and took the whole
+// process down, which no handler can recover from.
+func TestFilterLimits(t *testing.T) {
+	c := newServer(t)
+	c.createPatient("A1", "Chalmers")
+
+	nested := func(open, close string, depth int) string {
+		return strings.Repeat(open, depth) + `name eq "Chalmers"` + strings.Repeat(close, depth)
+	}
+	comparisons := func(n int) string {
+		return strings.TrimSuffix(strings.Repeat(`name eq "Chalmers" or `, n), " or ")
+	}
+
+	// The limits sit far beyond anything a person writes, so the boundary
+	// itself still answers.
+	for _, filter := range []string{
+		nested("(", ")", 32),
+		nested("not(not(", "))", 16),
+		comparisons(256),
+	} {
+		if got := c.total("/Patient?_filter=" + url.QueryEscape(filter)); got != 1 {
+			t.Errorf("filter at the limit: total = %v, want 1", got)
+		}
+	}
+
+	cases := []struct{ name, filter, phrase string }{
+		{"parentheses", nested("(", ")", 33), "nests more than 32 levels"},
+		{"not", nested("not(", ")", 33), "nests more than 32 levels"},
+		{"comparisons", comparisons(257), "more than 256 comparisons"},
+		{"tokens", strings.Repeat("( ", 5000), "_filter is too long"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assertBadRequest(t, c, "/Patient?_filter="+url.QueryEscape(tc.filter), tc.phrase)
+		})
+	}
+
+	// The shape that crashed the server: millions of parentheses in a form
+	// body, where the query string's size limit does not apply. It now fails
+	// in the lexer, before any recursion starts.
+	t.Run("POST _search", func(t *testing.T) {
+		const depth = 2_000_000
+		body := "_filter=" + nested("(", ")", depth)
+		resp := c.do("POST", "/Patient/_search", body,
+			"Content-Type", "application/x-www-form-urlencoded")
+		if resp.status != http.StatusBadRequest {
+			t.Fatalf("status %d, want 400\nbody: %.300s", resp.status, resp.body)
+		}
+		assertOutcome(t, resp, "invalid")
+		if !strings.Contains(string(resp.body), "_filter is too long") {
+			t.Errorf("outcome does not say the filter is too long: %.300s", resp.body)
+		}
+	})
+}
+
 func equalStrings(got, want []string) bool {
 	if len(got) != len(want) {
 		return false

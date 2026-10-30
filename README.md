@@ -127,7 +127,16 @@ Behaviours worth stating, because each is easy to get subtly wrong:
 - **Every error carries an OperationOutcome.** There are no bare status codes.
 - **JSON and XML are the same server.** Both are read and written by one pair
   of codecs over one document model, so a resource created as XML reads back
-  identically as JSON.
+  identically as JSON. An XML value that is not valid for its type, such as a
+  boolean of `yes`, is kept as written, as JSON would keep it, so validation
+  can report it.
+- **Documents nest at most 1,000 levels deep,** counted as JSON counts them,
+  and XML at most the 500 elements that produce that. No real resource comes
+  close, but the code that walks a document recurses once per level, so a
+  deeper one is a `400` rather than a risk to the whole process.
+- **Nothing is stored that cannot be read back.** Each write is parsed again
+  before it commits, so a reader bug can fail one request but cannot leave a
+  row that breaks every later search and history request.
 
 ## Transactions and batches
 
@@ -263,6 +272,11 @@ GET /Observation?_filter=patient.family sw "Chal" and value-quantity gt 60
 performs, since the operator says what it means; `co`, `sw`, and `ew` are the
 substring forms. The operators that need terminology — `in`, `ni`, `ss`, `sb`
 — are refused for the same reason the modifiers are.
+
+Each `_filter` value is limited to 32 levels of grouping, 256 comparisons, and
+4,096 words, values and parentheses. Past any of them it is a `400`: the
+parser recurses once per group, and one expression nested deeply enough once
+overflowed the stack and took the whole server down with it.
 
 Parameters that are declared but not indexed are deliberately absent from the
 CapabilityStatement rather than advertised and broken.

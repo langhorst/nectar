@@ -1,6 +1,8 @@
 package resource_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -211,6 +213,98 @@ func TestNarrativeSurvivesXML(t *testing.T) {
 	}
 	if strings.Contains(string(out), "&lt;div") {
 		t.Error("narrative was escaped instead of emitted as markup")
+	}
+}
+
+// A primitive may carry only extensions -- a data-absent-reason is the usual
+// case -- and then exists only as its "_name" sidecar. Written as XML it is an
+// element with those extensions and no value attribute; leaving it out would
+// lose the extensions.
+func TestValuelessPrimitivesWriteToXML(t *testing.T) {
+	const absent = `{"url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason", "valueCode": "unknown"}`
+	node := fromJSON(t, `{
+	  "resourceType": "Patient",
+	  "_birthDate": {"extension": [`+absent+`]},
+	  "name": [{"family": "Chalmers", "_given": [{"extension": [`+absent+`]}, {"id": "g2", "extension": [`+absent+`]}]}]
+	}`)
+	out, err := node.XML("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	xml := string(out)
+	for _, want := range []string{
+		`<birthDate><extension url="http://hl7.org/fhir/StructureDefinition/data-absent-reason"><valueCode value="unknown"/></extension></birthDate>`,
+		`<given><extension url="http://hl7.org/fhir/StructureDefinition/data-absent-reason"><valueCode value="unknown"/></extension></given>`,
+		`<given id="g2"><extension url="http://hl7.org/fhir/StructureDefinition/data-absent-reason"><valueCode value="unknown"/></extension></given>`,
+	} {
+		if !strings.Contains(xml, want) {
+			t.Errorf("XML is missing %s\n%s", want, xml)
+		}
+	}
+	if strings.Contains(xml, `value=""`) {
+		t.Errorf("XML gives a value-less primitive an empty value:\n%s", xml)
+	}
+}
+
+// Only a sidecar for a primitive the type defines can stand in for its
+// element. Any other key starting with "_" -- a bare "_", a name the type does
+// not have, the id and url written as attributes -- must not turn into an
+// empty or invented element name.
+func TestStraySidecarsDoNotBecomeElements(t *testing.T) {
+	const ext = `{"extension": [{"url": "http://example.org/x", "valueString": "y"}]}`
+	for _, key := range []string{"_", "_foo", "_id", "_url"} {
+		t.Run(key, func(t *testing.T) {
+			out, err := fromJSON(t, `{"resourceType": "Patient", "`+key+`": `+ext+`}`).XML("")
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := `<?xml version="1.0" encoding="UTF-8"?><Patient xmlns="http://hl7.org/fhir"/>`
+			if got := strings.TrimSpace(string(out)); got != want {
+				t.Errorf("XML = %s\nwant %s", got, want)
+			}
+		})
+	}
+}
+
+// The same element read from XML: no value attribute means no value, so the
+// JSON shape leaves the element out and keeps its sidecar, a repeating element
+// keeps a null in its place, and writing XML again gives back what was read.
+func TestValuelessPrimitivesRoundTripXML(t *testing.T) {
+	const ext = `<extension url="http://hl7.org/fhir/StructureDefinition/data-absent-reason"><valueCode value="unknown"/></extension>`
+	node := fromXML(t, `<Patient xmlns="http://hl7.org/fhir">`+
+		`<name><family value="Chalmers"/><given>`+ext+`</given><given value="Ann"/></name>`+
+		`<birthDate>`+ext+`</birthDate></Patient>`)
+
+	data, err := node.MarshalJSON()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(data, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if v, present := doc["birthDate"]; present {
+		t.Errorf("birthDate was given the value %#v; it has none", v)
+	}
+	if _, present := doc["_birthDate"]; !present {
+		t.Errorf("birthDate's extension was lost: %s", data)
+	}
+	name := doc["name"].([]any)[0].(map[string]any)
+	if got := fmt.Sprint(name["given"]); got != "[<nil> Ann]" {
+		t.Errorf("given = %s, want [<nil> Ann]", got)
+	}
+
+	out, err := node.XML("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`<given>` + ext + `</given>`, `<given value="Ann"/>`, `<birthDate>` + ext + `</birthDate>`} {
+		if !strings.Contains(string(out), want) {
+			t.Errorf("XML is missing %s\n%s", want, out)
+		}
+	}
+	if strings.Contains(string(out), `value=""`) {
+		t.Errorf("XML gives a value-less primitive an empty value:\n%s", out)
 	}
 }
 

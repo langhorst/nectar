@@ -1,6 +1,9 @@
 package resource_test
 
 import (
+	"encoding/json"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/langhorst/nectar/internal/conformance"
@@ -179,16 +182,26 @@ func TestPrimitiveExtensions(t *testing.T) {
 }
 
 // A primitive present only as extensions has no value, and behaves as empty
-// rather than as an error.
+// rather than as an error -- in either format. XML spells it as an element
+// with no value attribute, and the reader must not invent one.
 func TestPrimitiveWithoutValue(t *testing.T) {
-	node := fromJSON(t, `{
+	jsonDoc := `{
 	  "resourceType": "Patient",
 	  "name": [{"_family": {"extension": [{"url": "http://example.com/x", "valueString": "y"}]}}]
-	}`)
-	assertEqual(t, "family exists", eval(t, node, "Patient.name.family.exists()"), []string{"true"})
-	assertEqual(t, "hasValue", eval(t, node, "Patient.name.family.hasValue()"), []string{"false"})
-	// String functions see nothing there rather than failing.
-	assertEqual(t, "length", eval(t, node, "Patient.name.family.length()"), nil)
+	}`
+	xmlDoc := `<Patient xmlns="http://hl7.org/fhir"><name><family>
+	  <extension url="http://example.com/x"><valueString value="y"/></extension>
+	</family></name></Patient>`
+
+	for name, node := range map[string]*resource.Node{"json": fromJSON(t, jsonDoc), "xml": fromXML(t, xmlDoc)} {
+		t.Run(name, func(t *testing.T) {
+			assertEqual(t, "family exists", eval(t, node, "Patient.name.family.exists()"), []string{"true"})
+			assertEqual(t, "hasValue", eval(t, node, "Patient.name.family.hasValue()"), []string{"false"})
+			assertEqual(t, "extension", eval(t, node, "Patient.name.family.extension.value"), []string{"y"})
+			// String functions see nothing there rather than failing.
+			assertEqual(t, "length", eval(t, node, "Patient.name.family.length()"), nil)
+		})
+	}
 }
 
 // Recursive structures are defined by contentReference. Both readers must
@@ -256,6 +269,155 @@ func TestReaderErrors(t *testing.T) {
 	}
 	if _, err := resource.FromXML(idx, []byte(`<Nonexistent xmlns="http://hl7.org/fhir"/>`)); err == nil {
 		t.Error("FromXML with an unknown resource type: expected an error")
+	}
+}
+
+// Documents a client sends are held to resource.MaxDepth, measured the way JSON
+// nests. XML is held to the element depth that produces it, while it is still
+// being tokenized: converting XML recurses once per element, and Go cannot
+// recover from a stack overflow.
+func TestDepthLimits(t *testing.T) {
+	idx := conformance.MustLoad(conformance.R5)
+
+	// n nested extensions under a Patient: one element per level in XML, and
+	// an array holding an object, two levels, per extension in JSON.
+	deepXML := func(n int) []byte {
+		return []byte(`<Patient xmlns="http://hl7.org/fhir">` +
+			strings.Repeat(`<extension url="http://example.org/x">`, n) +
+			strings.Repeat(`</extension>`, n) + `</Patient>`)
+	}
+	deepJSON := func(n int) []byte {
+		return []byte(`{"resourceType":"Patient"` +
+			strings.Repeat(`,"extension":[{"url":"http://example.org/x"`, n) +
+			strings.Repeat(`}]`, n) + `}`)
+	}
+
+	// At the limit, 500 elements and 999 levels of JSON, both formats are
+	// accepted, and what they produce reads back once serialized.
+	for name, read := range map[string]func() (*resource.Node, error){
+		"json": func() (*resource.Node, error) { return resource.FromJSON(idx, deepJSON(499)) },
+		"xml":  func() (*resource.Node, error) { return resource.FromXML(idx, deepXML(499)) },
+	} {
+		t.Run(name+" at the limit", func(t *testing.T) {
+			node, err := read()
+			if err != nil {
+				t.Fatalf("reading: %v", err)
+			}
+			if err := resource.CheckDepth(node); err != nil {
+				t.Fatalf("CheckDepth: %v", err)
+			}
+			data, err := node.MarshalJSON()
+			if err != nil {
+				t.Fatalf("serializing: %v", err)
+			}
+			if _, err := resource.FromJSON(idx, data); err != nil {
+				t.Fatalf("the serialized document does not read back: %v", err)
+			}
+		})
+	}
+
+	// One past the limit.
+	if _, err := resource.FromXML(idx, deepXML(500)); err == nil ||
+		!strings.Contains(err.Error(), "more than 500 elements deep") {
+		t.Errorf("FromXML one element past the limit: err = %v", err)
+	}
+	node, err := resource.FromJSON(idx, deepJSON(500))
+	if err != nil {
+		// FromJSON reads stored documents too, so it applies no limit itself.
+		t.Fatalf("FromJSON past the limit: %v", err)
+	}
+	if err := resource.CheckDepth(node); err == nil ||
+		!strings.Contains(err.Error(), "more than 1000 levels deep") {
+		t.Errorf("CheckDepth one level past the limit: err = %v", err)
+	}
+
+	// The shape that overflowed the stack: a million nested elements, 31 MB.
+	// It now stops at element 501, before any recursion.
+	if _, err := resource.FromXML(idx, deepXML(1_000_000)); err == nil {
+		t.Error("FromXML of a million nested elements: expected an error")
+	}
+	// encoding/json refuses anything past 10,000 levels on its own.
+	if _, err := resource.FromJSON(idx, deepJSON(6000)); err == nil {
+		t.Error("FromJSON of 12,001 levels: expected an error")
+	}
+}
+
+// A number in XML is an attribute's text, so it can be anything. A valid one
+// becomes a number, exactly as spelled. Anything else stays text, as the JSON
+// reader keeps "value": "1.0.0", so validation can report it: written out as a
+// number, it would make the stored document unparseable.
+func TestXMLNumbers(t *testing.T) {
+	idx := conformance.MustLoad(conformance.R5)
+	for _, tc := range []struct {
+		raw    string
+		number bool
+	}{
+		{"0", true}, {"-1.50", true}, {"1e10", true}, {"6.02E+23", true},
+		{"1.0.0", false}, {"abc", false}, {"01", false}, {"+1", false},
+		{" 1", false}, {"1.", false}, {".5", false}, {"NaN", false}, {"0x10", false},
+	} {
+		t.Run(tc.raw, func(t *testing.T) {
+			node, err := resource.FromXML(idx, []byte(`<Observation xmlns="http://hl7.org/fhir">`+
+				`<status value="final"/><code><text value="x"/></code>`+
+				`<valueQuantity><value value="`+tc.raw+`"/></valueQuantity></Observation>`))
+			if err != nil {
+				t.Fatalf("FromXML: %v", err)
+			}
+			data, err := node.MarshalJSON()
+			if err != nil {
+				t.Fatalf("serializing: %v", err)
+			}
+			if _, err := resource.FromJSON(idx, data); err != nil {
+				t.Fatalf("the serialized document does not read back: %v\n%s", err, data)
+			}
+			var doc struct {
+				ValueQuantity struct {
+					Value json.RawMessage `json:"value"`
+				} `json:"valueQuantity"`
+			}
+			if err := json.Unmarshal(data, &doc); err != nil {
+				t.Fatal(err)
+			}
+			want := tc.raw
+			if !tc.number {
+				want = strconv.Quote(tc.raw)
+			}
+			if got := string(doc.ValueQuantity.Value); got != want {
+				t.Errorf("value = %s, want %s", got, want)
+			}
+		})
+	}
+}
+
+// An XML boolean is an attribute's text too. "true" and "false" are booleans;
+// anything else is kept as written, as the JSON reader keeps "active": "yes",
+// so both formats store the same thing and validation reports it. It used to
+// become false.
+func TestXMLBooleans(t *testing.T) {
+	idx := conformance.MustLoad(conformance.R5)
+	for _, tc := range []struct{ raw, want string }{
+		{"true", "true"}, {"false", "false"},
+		{"yes", `"yes"`}, {"TRUE", `"TRUE"`}, {"1", `"1"`}, {"", `""`},
+	} {
+		t.Run(tc.raw, func(t *testing.T) {
+			node, err := resource.FromXML(idx, []byte(`<Patient xmlns="http://hl7.org/fhir"><active value="`+tc.raw+`"/></Patient>`))
+			if err != nil {
+				t.Fatalf("FromXML: %v", err)
+			}
+			data, err := node.MarshalJSON()
+			if err != nil {
+				t.Fatal(err)
+			}
+			var doc struct {
+				Active json.RawMessage `json:"active"`
+			}
+			if err := json.Unmarshal(data, &doc); err != nil {
+				t.Fatal(err)
+			}
+			if got := string(doc.Active); got != tc.want {
+				t.Errorf("active = %s, want %s", got, tc.want)
+			}
+		})
 	}
 }
 

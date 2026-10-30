@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/langhorst/nectar/internal/conformance"
@@ -62,6 +63,11 @@ func parseXML(data []byte) (*xmlElement, error) {
 		}
 		switch t := tok.(type) {
 		case xml.StartElement:
+			// The conversion into the JSON shape recurses once per level, so
+			// depth is held to a limit here, while parsing is still iterative.
+			if len(stack) == maxXMLDepth {
+				return nil, fmt.Errorf("resource: the XML nests more than %d elements deep", maxXMLDepth)
+			}
 			el := &xmlElement{name: t.Name.Local, attrs: map[string]string{}}
 			for _, a := range t.Attr {
 				if a.Name.Local == "xmlns" || a.Name.Space == "xmlns" {
@@ -136,8 +142,10 @@ func elementToMap(idx *conformance.Index, def *conformance.TypeDef, path string,
 
 		isArray := step.Element != nil && step.Element.IsArray()
 		if isArray {
+			// An occurrence without a value stays as a null, which keeps the
+			// array aligned with its "_name" sidecar.
 			obj[name] = values
-		} else {
+		} else if values[0] != nil {
 			obj[name] = values[0]
 		}
 
@@ -175,9 +183,16 @@ func xmlValue(idx *conformance.Index, el *xmlElement, childType string, childDef
 		return map[string]any{}
 	}
 
-	// A primitive with no element children is just its value attribute.
+	// A primitive's value is its value attribute. Without one it has no value
+	// at all -- it carries only an id or extensions, a data-absent-reason
+	// being the usual case -- which the JSON shape expresses by leaving the
+	// element out and keeping its "_name" sidecar.
 	if isPrimitiveType(idx, childType) {
-		return primitiveFromAttr(childType, el.attrs["value"])
+		raw, present := el.attrs["value"]
+		if !present {
+			return nil
+		}
+		return primitiveFromAttr(childType, raw)
 	}
 
 	if childDef == nil {
@@ -191,21 +206,38 @@ func isPrimitiveType(idx *conformance.Index, name string) bool {
 	return ok && def.Kind == "primitive-type"
 }
 
-// primitiveFromAttr converts a value attribute to the representation the JSON
-// reader would have produced, so numbers and booleans are not left as strings.
+// primitiveFromAttr converts a value attribute that is present to the
+// representation the JSON reader would have produced, so numbers and booleans
+// are not left as strings. Text that is not a valid value of its type, an empty
+// attribute included, is kept as written, exactly as the JSON reader keeps
+// "active": "yes": validation then reports it, where a guess would silently
+// change the data.
 func primitiveFromAttr(fhirType, raw string) any {
 	switch fhirType {
 	case "boolean":
-		return raw == "true"
+		switch raw {
+		case "true":
+			return true
+		case "false":
+			return false
+		}
+		return raw
 	case "integer", "positiveInt", "unsignedInt", "decimal":
-		if raw == "" {
-			return nil
+		if !jsonNumberPattern.MatchString(raw) {
+			// Kept as written, as the JSON reader keeps "value": "1.0.0", so
+			// validation reports it. As a jsonNumber it would be written into
+			// the stored JSON verbatim, and the stored document would not parse.
+			return raw
 		}
 		return jsonNumber(raw)
 	default:
 		return raw
 	}
 }
+
+// jsonNumberPattern is JSON's number grammar, which is also FHIR's for
+// decimals: no leading zeros, no leading "+", no surrounding space.
+var jsonNumberPattern = regexp.MustCompile(`^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$`)
 
 // primitiveSidecars extracts the id and extension children of primitive
 // elements into the "_name" objects the JSON shape uses. It returns nil when

@@ -66,6 +66,7 @@ func Run(t *testing.T, factory Open) {
 		{"FullText", s.testFullText},
 		{"Include", s.testInclude},
 		{"Composite", s.testComposite},
+		{"RefusesContentThatDoesNotReadBack", s.testRefusesContentThatDoesNotReadBack},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, tc.run)
@@ -98,6 +99,51 @@ func patient(t *testing.T, id, family string) *resource.Node {
 	  "identifier": [{"system": "http://example.org/mrn", "value": "%s-mrn"}],
 	  "name": [{"family": %q, "given": ["Ann"]}]
 	}`, id, id, family))
+}
+
+// A resource whose serialized form will not read back is refused, and refusing
+// it leaves nothing behind. Stored, it would fail every search and history
+// request that touched it, and nothing could remove it from history.
+func (s suite) testRefusesContentThatDoesNotReadBack(t *testing.T) {
+	ctx := context.Background()
+	store := s.store(t)
+
+	// resource.Number is written into the JSON verbatim, so text that is not a
+	// JSON number serializes to a document that does not parse. The readers no
+	// longer produce such values; this builds one directly to test the
+	// backstop behind them.
+	broken, err := resource.New(conformance.MustLoad(conformance.R5), map[string]any{
+		"resourceType":  "Observation",
+		"id":            "o1",
+		"status":        "final",
+		"code":          map[string]any{"text": "x"},
+		"valueQuantity": map[string]any{"value": resource.Number("1.0.0")},
+	})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if _, err := store.Create(ctx, broken); err == nil {
+		t.Fatal("Create stored a resource that does not read back")
+	}
+	if _, _, err := store.Update(ctx, broken, ""); err == nil {
+		t.Fatal("Update stored a resource that does not read back")
+	}
+
+	if _, err := store.Read(ctx, "Observation", "o1"); !errors.Is(err, storage.ErrNotFound) {
+		t.Errorf("Read after the refused writes = %v, want ErrNotFound", err)
+	}
+	history, err := store.History(ctx, storage.HistoryQuery{})
+	if err != nil {
+		t.Fatalf("History: %v", err)
+	}
+	if len(history) != 0 {
+		t.Errorf("history holds %d versions after refused writes, want 0", len(history))
+	}
+
+	// Refusing one write leaves the store working.
+	if _, err := store.Create(ctx, patient(t, "p1", "Chalmers")); err != nil {
+		t.Fatalf("Create after a refused write: %v", err)
+	}
 }
 
 func (s suite) testCreateReadRoundTrip(t *testing.T) {
