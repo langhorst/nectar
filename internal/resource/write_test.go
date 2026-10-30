@@ -214,6 +214,36 @@ func TestNarrativeSurvivesXML(t *testing.T) {
 	}
 }
 
+// A primitive may carry only extensions -- a data-absent-reason is the usual
+// case -- and then exists only as its "_name" sidecar. Written as XML it is an
+// element with those extensions and no value attribute; leaving it out would
+// lose the extensions.
+func TestValuelessPrimitivesWriteToXML(t *testing.T) {
+	const absent = `{"url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason", "valueCode": "unknown"}`
+	node := fromJSON(t, `{
+	  "resourceType": "Patient",
+	  "_birthDate": {"extension": [`+absent+`]},
+	  "name": [{"family": "Chalmers", "_given": [{"extension": [`+absent+`]}, {"id": "g2", "extension": [`+absent+`]}]}]
+	}`)
+	out, err := node.XML("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	xml := string(out)
+	for _, want := range []string{
+		`<birthDate><extension url="http://hl7.org/fhir/StructureDefinition/data-absent-reason"><valueCode value="unknown"/></extension></birthDate>`,
+		`<given><extension url="http://hl7.org/fhir/StructureDefinition/data-absent-reason"><valueCode value="unknown"/></extension></given>`,
+		`<given id="g2"><extension url="http://hl7.org/fhir/StructureDefinition/data-absent-reason"><valueCode value="unknown"/></extension></given>`,
+	} {
+		if !strings.Contains(xml, want) {
+			t.Errorf("XML is missing %s\n%s", want, xml)
+		}
+	}
+	if strings.Contains(xml, `value=""`) {
+		t.Errorf("XML gives a value-less primitive an empty value:\n%s", xml)
+	}
+}
+
 func truncate(b []byte) string {
 	if len(b) > 400 {
 		return string(b[:400]) + "..."

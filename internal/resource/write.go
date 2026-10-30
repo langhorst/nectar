@@ -259,7 +259,8 @@ func (w *xmlWriter) element(name string, def *conformance.TypeDef, path string, 
 }
 
 // childKeys lists the object's keys that become child elements, in definition
-// order. Attributes and the primitive sidecars are handled elsewhere.
+// order. Attributes are handled elsewhere, and so are the primitive sidecars,
+// which are written alongside the primitive they annotate.
 func (w *xmlWriter) childKeys(def *conformance.TypeDef, path string, obj map[string]any) []string {
 	var out []string
 	for _, key := range orderedKeys(w.idx, def, path, obj) {
@@ -267,7 +268,14 @@ func (w *xmlWriter) childKeys(def *conformance.TypeDef, path string, obj map[str
 		case key == "resourceType", key == "id", key == "url":
 			continue
 		case strings.HasPrefix(key, "_"):
-			// Emitted alongside the primitive they annotate.
+			// A primitive that carries only extensions -- a data-absent-reason
+			// is the usual case -- has a sidecar and no value. The sidecar is
+			// then all there is of the element, so it names the element here;
+			// skipping it would drop the extensions from the document.
+			base := strings.TrimPrefix(key, "_")
+			if _, present := obj[base]; !present {
+				out = append(out, base)
+			}
 			continue
 		}
 		out = append(out, key)
@@ -289,6 +297,11 @@ func (w *xmlWriter) child(def *conformance.TypeDef, path, key string, obj map[st
 		sidecars = []any{ext}
 	case []any:
 		sidecars = ext
+	}
+	if obj[key] == nil {
+		// Only the sidecar exists, so it says how many occurrences there are;
+		// none of them has a value.
+		values = make([]any, len(sidecars))
 	}
 
 	for i, v := range values {
