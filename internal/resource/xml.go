@@ -62,6 +62,11 @@ func parseXML(data []byte) (*xmlElement, error) {
 		}
 		switch t := tok.(type) {
 		case xml.StartElement:
+			// The conversion into the JSON shape recurses once per level, so
+			// depth is held to a limit here, while parsing is still iterative.
+			if len(stack) == maxXMLDepth {
+				return nil, fmt.Errorf("resource: the XML nests more than %d elements deep", maxXMLDepth)
+			}
 			el := &xmlElement{name: t.Name.Local, attrs: map[string]string{}}
 			for _, a := range t.Attr {
 				if a.Name.Local == "xmlns" || a.Name.Space == "xmlns" {

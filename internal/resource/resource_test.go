@@ -1,6 +1,7 @@
 package resource_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/langhorst/nectar/internal/conformance"
@@ -256,6 +257,76 @@ func TestReaderErrors(t *testing.T) {
 	}
 	if _, err := resource.FromXML(idx, []byte(`<Nonexistent xmlns="http://hl7.org/fhir"/>`)); err == nil {
 		t.Error("FromXML with an unknown resource type: expected an error")
+	}
+}
+
+// Documents a client sends are held to resource.MaxDepth, measured the way JSON
+// nests. XML is held to the element depth that produces it, while it is still
+// being tokenized: converting XML recurses once per element, and Go cannot
+// recover from a stack overflow.
+func TestDepthLimits(t *testing.T) {
+	idx := conformance.MustLoad(conformance.R5)
+
+	// n nested extensions under a Patient: one element per level in XML, and
+	// an array holding an object, two levels, per extension in JSON.
+	deepXML := func(n int) []byte {
+		return []byte(`<Patient xmlns="http://hl7.org/fhir">` +
+			strings.Repeat(`<extension url="http://example.org/x">`, n) +
+			strings.Repeat(`</extension>`, n) + `</Patient>`)
+	}
+	deepJSON := func(n int) []byte {
+		return []byte(`{"resourceType":"Patient"` +
+			strings.Repeat(`,"extension":[{"url":"http://example.org/x"`, n) +
+			strings.Repeat(`}]`, n) + `}`)
+	}
+
+	// At the limit, 500 elements and 999 levels of JSON, both formats are
+	// accepted, and what they produce reads back once serialized.
+	for name, read := range map[string]func() (*resource.Node, error){
+		"json": func() (*resource.Node, error) { return resource.FromJSON(idx, deepJSON(499)) },
+		"xml":  func() (*resource.Node, error) { return resource.FromXML(idx, deepXML(499)) },
+	} {
+		t.Run(name+" at the limit", func(t *testing.T) {
+			node, err := read()
+			if err != nil {
+				t.Fatalf("reading: %v", err)
+			}
+			if err := resource.CheckDepth(node); err != nil {
+				t.Fatalf("CheckDepth: %v", err)
+			}
+			data, err := node.MarshalJSON()
+			if err != nil {
+				t.Fatalf("serializing: %v", err)
+			}
+			if _, err := resource.FromJSON(idx, data); err != nil {
+				t.Fatalf("the serialized document does not read back: %v", err)
+			}
+		})
+	}
+
+	// One past the limit.
+	if _, err := resource.FromXML(idx, deepXML(500)); err == nil ||
+		!strings.Contains(err.Error(), "more than 500 elements deep") {
+		t.Errorf("FromXML one element past the limit: err = %v", err)
+	}
+	node, err := resource.FromJSON(idx, deepJSON(500))
+	if err != nil {
+		// FromJSON reads stored documents too, so it applies no limit itself.
+		t.Fatalf("FromJSON past the limit: %v", err)
+	}
+	if err := resource.CheckDepth(node); err == nil ||
+		!strings.Contains(err.Error(), "more than 1000 levels deep") {
+		t.Errorf("CheckDepth one level past the limit: err = %v", err)
+	}
+
+	// The shape that overflowed the stack: a million nested elements, 31 MB.
+	// It now stops at element 501, before any recursion.
+	if _, err := resource.FromXML(idx, deepXML(1_000_000)); err == nil {
+		t.Error("FromXML of a million nested elements: expected an error")
+	}
+	// encoding/json refuses anything past 10,000 levels on its own.
+	if _, err := resource.FromJSON(idx, deepJSON(6000)); err == nil {
+		t.Error("FromJSON of 12,001 levels: expected an error")
 	}
 }
 
