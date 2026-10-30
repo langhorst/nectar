@@ -273,7 +273,7 @@ func (w *xmlWriter) childKeys(def *conformance.TypeDef, path string, obj map[str
 			// then all there is of the element, so it names the element here;
 			// skipping it would drop the extensions from the document.
 			base := strings.TrimPrefix(key, "_")
-			if _, present := obj[base]; !present {
+			if _, present := obj[base]; !present && w.primitiveElement(def, path, base) {
 				out = append(out, base)
 			}
 			continue
@@ -281,6 +281,19 @@ func (w *xmlWriter) childKeys(def *conformance.TypeDef, path string, obj map[str
 		out = append(out, key)
 	}
 	return out
+}
+
+// primitiveElement reports whether a sidecar's name is one it can stand in
+// for: a primitive element the type defines at this position, other than the
+// id and url written as attributes. Anything else -- a bare "_", a name the
+// type does not have -- would put an empty or invented element name into the
+// XML.
+func (w *xmlWriter) primitiveElement(def *conformance.TypeDef, path, name string) bool {
+	if name == "id" || name == "url" {
+		return false
+	}
+	step, ok := w.idx.Step(conformance.Cursor{Def: def, Path: path}, name)
+	return ok && isPrimitiveType(w.idx, step.Type)
 }
 
 func (w *xmlWriter) child(def *conformance.TypeDef, path, key string, obj map[string]any, depth int) error {

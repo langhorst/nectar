@@ -246,6 +246,26 @@ func TestValuelessPrimitivesWriteToXML(t *testing.T) {
 	}
 }
 
+// Only a sidecar for a primitive the type defines can stand in for its
+// element. Any other key starting with "_" -- a bare "_", a name the type does
+// not have, the id and url written as attributes -- must not turn into an
+// empty or invented element name.
+func TestStraySidecarsDoNotBecomeElements(t *testing.T) {
+	const ext = `{"extension": [{"url": "http://example.org/x", "valueString": "y"}]}`
+	for _, key := range []string{"_", "_foo", "_id", "_url"} {
+		t.Run(key, func(t *testing.T) {
+			out, err := fromJSON(t, `{"resourceType": "Patient", "`+key+`": `+ext+`}`).XML("")
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := `<?xml version="1.0" encoding="UTF-8"?><Patient xmlns="http://hl7.org/fhir"/>`
+			if got := strings.TrimSpace(string(out)); got != want {
+				t.Errorf("XML = %s\nwant %s", got, want)
+			}
+		})
+	}
+}
+
 // The same element read from XML: no value attribute means no value, so the
 // JSON shape leaves the element out and keeps its sidecar, a repeating element
 // keeps a null in its place, and writing XML again gives back what was read.
