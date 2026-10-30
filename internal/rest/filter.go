@@ -25,6 +25,22 @@ import (
 //	unary    := "not" "(" filter ")" | "(" filter ")" | paramExp
 //	paramExp := path operator [value]
 
+// Limits on one _filter expression. Each is far beyond anything a person
+// writes, and each bounds a cost an untrusted query could otherwise buy cheaply:
+//
+//   - tokens bound the memory spent before parsing starts, since the lexer
+//     materializes the whole expression;
+//   - depth bounds the parser's recursion, which matters more than it looks:
+//     Go cannot recover from a stack overflow, so one request nested deeply
+//     enough exits the whole process rather than failing on its own;
+//   - comparisons bound the SQL the expression renders to, which the database
+//     parses recursively in turn.
+const (
+	maxFilterTokens      = 4096
+	maxFilterDepth       = 32
+	maxFilterComparisons = 256
+)
+
 // parseFilter parses a _filter expression against a resource type.
 func parseFilter(idx *conformance.Index, resourceType, raw string) (*storage.FilterExpr, error) {
 	tokens, err := lexFilter(raw)
@@ -69,6 +85,11 @@ type filterToken struct {
 func lexFilter(raw string) ([]filterToken, error) {
 	var tokens []filterToken
 	for i := 0; i < len(raw); {
+		if len(tokens) > maxFilterTokens {
+			return nil, &searchError{fmt.Sprintf(
+				"_filter is too long: this server accepts at most %d words, values and parentheses",
+				maxFilterTokens)}
+		}
 		switch c := raw[i]; {
 		case c == ' ' || c == '\t' || c == '\n' || c == '\r':
 			i++
@@ -104,6 +125,11 @@ func lexFilter(raw string) ([]filterToken, error) {
 			tokens = append(tokens, filterToken{filterWord, unescapeValue(raw[start:i])})
 		}
 	}
+	if len(tokens) > maxFilterTokens {
+		return nil, &searchError{fmt.Sprintf(
+			"_filter is too long: this server accepts at most %d words, values and parentheses",
+			maxFilterTokens)}
+	}
 	return tokens, nil
 }
 
@@ -118,6 +144,11 @@ type filterParser struct {
 	pos          int
 	idx          *conformance.Index
 	resourceType string
+
+	// depth is how many groups enclose the current position; comparisons
+	// counts the leaves read so far. Both are held to the limits above.
+	depth       int
+	comparisons int
 }
 
 func (p *filterParser) peek() (filterToken, bool) {
@@ -200,6 +231,14 @@ func (p *filterParser) parseGroup() (*storage.FilterExpr, error) {
 	if !ok || token.kind != filterLParen {
 		return nil, &searchError{"_filter expects a parenthesized expression here"}
 	}
+	// Every group, "not(...)" included, is one level of recursion, so this is
+	// the one place the depth has to be counted.
+	if p.depth == maxFilterDepth {
+		return nil, &searchError{fmt.Sprintf(
+			"_filter nests more than %d levels of parentheses", maxFilterDepth)}
+	}
+	p.depth++
+	defer func() { p.depth-- }()
 	inner, err := p.parseOr()
 	if err != nil {
 		return nil, err
@@ -212,6 +251,11 @@ func (p *filterParser) parseGroup() (*storage.FilterExpr, error) {
 
 // parseParamExp reads one "path operator value" comparison.
 func (p *filterParser) parseParamExp() (*storage.FilterExpr, error) {
+	if p.comparisons == maxFilterComparisons {
+		return nil, &searchError{fmt.Sprintf(
+			"_filter has more than %d comparisons", maxFilterComparisons)}
+	}
+	p.comparisons++
 	pathToken, ok := p.next()
 	if !ok || pathToken.kind != filterWord {
 		return nil, &searchError{"_filter expects a search parameter name here"}
