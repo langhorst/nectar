@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/langhorst/nectar/internal/conformance"
@@ -206,11 +207,21 @@ func primitiveFromAttr(fhirType, raw string) any {
 		if raw == "" {
 			return nil
 		}
+		if !jsonNumberPattern.MatchString(raw) {
+			// Kept as written, as the JSON reader keeps "value": "1.0.0", so
+			// validation reports it. As a jsonNumber it would be written into
+			// the stored JSON verbatim, and the stored document would not parse.
+			return raw
+		}
 		return jsonNumber(raw)
 	default:
 		return raw
 	}
 }
+
+// jsonNumberPattern is JSON's number grammar, which is also FHIR's for
+// decimals: no leading zeros, no leading "+", no surrounding space.
+var jsonNumberPattern = regexp.MustCompile(`^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$`)
 
 // primitiveSidecars extracts the id and extension children of primitive
 // elements into the "_name" objects the JSON shape uses. It returns nil when

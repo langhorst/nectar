@@ -73,3 +73,23 @@ func TestDeepDocumentsAreRefused(t *testing.T) {
 	c.expect(http.StatusOK, "GET", "/Patient", "")
 	c.expect(http.StatusOK, "GET", "/_history", "")
 }
+
+// An XML number that is not a number once went into the stored JSON as a
+// number token, so the stored document no longer parsed and every later search
+// of the type failed. It is now kept as text, as the JSON reader keeps it, and
+// validation says what is wrong with it.
+func TestInvalidXMLNumbersStayReadable(t *testing.T) {
+	c := newServer(t)
+	body := `<Observation xmlns="http://hl7.org/fhir"><status value="final"/>` +
+		`<code><text value="x"/></code>` +
+		`<valueQuantity><value value="1.0.0"/></valueQuantity></Observation>`
+	c.expect(http.StatusCreated, "POST", "/Observation", body, "Content-Type", "application/fhir+xml")
+	c.expect(http.StatusOK, "GET", "/Observation", "")
+	c.expect(http.StatusOK, "GET", "/_history", "")
+
+	resp := c.expect(http.StatusOK, "POST", "/Observation/$validate", body,
+		"Content-Type", "application/fhir+xml")
+	if !strings.Contains(string(resp.body), "1.0.0") {
+		t.Errorf("validation does not report the invalid value: %s", resp.body)
+	}
+}

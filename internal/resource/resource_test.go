@@ -1,6 +1,8 @@
 package resource_test
 
 import (
+	"encoding/json"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -327,6 +329,53 @@ func TestDepthLimits(t *testing.T) {
 	// encoding/json refuses anything past 10,000 levels on its own.
 	if _, err := resource.FromJSON(idx, deepJSON(6000)); err == nil {
 		t.Error("FromJSON of 12,001 levels: expected an error")
+	}
+}
+
+// A number in XML is an attribute's text, so it can be anything. A valid one
+// becomes a number, exactly as spelled. Anything else stays text, as the JSON
+// reader keeps "value": "1.0.0", so validation can report it: written out as a
+// number, it would make the stored document unparseable.
+func TestXMLNumbers(t *testing.T) {
+	idx := conformance.MustLoad(conformance.R5)
+	for _, tc := range []struct {
+		raw    string
+		number bool
+	}{
+		{"0", true}, {"-1.50", true}, {"1e10", true}, {"6.02E+23", true},
+		{"1.0.0", false}, {"abc", false}, {"01", false}, {"+1", false},
+		{" 1", false}, {"1.", false}, {".5", false}, {"NaN", false}, {"0x10", false},
+	} {
+		t.Run(tc.raw, func(t *testing.T) {
+			node, err := resource.FromXML(idx, []byte(`<Observation xmlns="http://hl7.org/fhir">`+
+				`<status value="final"/><code><text value="x"/></code>`+
+				`<valueQuantity><value value="`+tc.raw+`"/></valueQuantity></Observation>`))
+			if err != nil {
+				t.Fatalf("FromXML: %v", err)
+			}
+			data, err := node.MarshalJSON()
+			if err != nil {
+				t.Fatalf("serializing: %v", err)
+			}
+			if _, err := resource.FromJSON(idx, data); err != nil {
+				t.Fatalf("the serialized document does not read back: %v\n%s", err, data)
+			}
+			var doc struct {
+				ValueQuantity struct {
+					Value json.RawMessage `json:"value"`
+				} `json:"valueQuantity"`
+			}
+			if err := json.Unmarshal(data, &doc); err != nil {
+				t.Fatal(err)
+			}
+			want := tc.raw
+			if !tc.number {
+				want = strconv.Quote(tc.raw)
+			}
+			if got := string(doc.ValueQuantity.Value); got != want {
+				t.Errorf("value = %s, want %s", got, want)
+			}
+		})
 	}
 }
 
