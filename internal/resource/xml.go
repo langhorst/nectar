@@ -208,12 +208,20 @@ func isPrimitiveType(idx *conformance.Index, name string) bool {
 
 // primitiveFromAttr converts a value attribute that is present to the
 // representation the JSON reader would have produced, so numbers and booleans
-// are not left as strings. Text that is not a valid number, an empty attribute
-// included, is kept as written for validation to report.
+// are not left as strings. Text that is not a valid value of its type, an empty
+// attribute included, is kept as written, exactly as the JSON reader keeps
+// "active": "yes": validation then reports it, where a guess would silently
+// change the data.
 func primitiveFromAttr(fhirType, raw string) any {
 	switch fhirType {
 	case "boolean":
-		return raw == "true"
+		switch raw {
+		case "true":
+			return true
+		case "false":
+			return false
+		}
+		return raw
 	case "integer", "positiveInt", "unsignedInt", "decimal":
 		if !jsonNumberPattern.MatchString(raw) {
 			// Kept as written, as the JSON reader keeps "value": "1.0.0", so

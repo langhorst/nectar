@@ -106,6 +106,28 @@ func TestValuelessPrimitivesSurviveXML(t *testing.T) {
 	}
 }
 
+// A boolean that is neither true nor false is stored as written, in both
+// formats, and validation says what is wrong with it. Sent as XML it used to
+// be stored as false without a word.
+func TestInvalidBooleansAreKeptAndReported(t *testing.T) {
+	c := newServer(t)
+	for _, tc := range []struct{ contentType, body string }{
+		{"application/fhir+xml", `<Patient xmlns="http://hl7.org/fhir"><active value="yes"/></Patient>`},
+		{"application/fhir+json", `{"resourceType":"Patient","active":"yes"}`},
+	} {
+		resp := c.expect(http.StatusCreated, "POST", "/Patient", tc.body, "Content-Type", tc.contentType)
+		stored := c.expect(http.StatusOK, "GET", pathOf(t, resp.headers.Get("Location")), "").json(t)
+		if stored["active"] != "yes" {
+			t.Errorf("%s: active stored as %#v, want \"yes\"", tc.contentType, stored["active"])
+		}
+
+		outcome := c.expect(http.StatusOK, "POST", "/Patient/$validate", tc.body, "Content-Type", tc.contentType)
+		if !strings.Contains(string(outcome.body), "Patient.active") {
+			t.Errorf("%s: validation does not report active: %s", tc.contentType, outcome.body)
+		}
+	}
+}
+
 // An XML number that is not a number once went into the stored JSON as a
 // number token, so the stored document no longer parsed and every later search
 // of the type failed. It is now kept as text, as the JSON reader keeps it, and

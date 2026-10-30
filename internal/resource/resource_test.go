@@ -389,6 +389,38 @@ func TestXMLNumbers(t *testing.T) {
 	}
 }
 
+// An XML boolean is an attribute's text too. "true" and "false" are booleans;
+// anything else is kept as written, as the JSON reader keeps "active": "yes",
+// so both formats store the same thing and validation reports it. It used to
+// become false.
+func TestXMLBooleans(t *testing.T) {
+	idx := conformance.MustLoad(conformance.R5)
+	for _, tc := range []struct{ raw, want string }{
+		{"true", "true"}, {"false", "false"},
+		{"yes", `"yes"`}, {"TRUE", `"TRUE"`}, {"1", `"1"`}, {"", `""`},
+	} {
+		t.Run(tc.raw, func(t *testing.T) {
+			node, err := resource.FromXML(idx, []byte(`<Patient xmlns="http://hl7.org/fhir"><active value="`+tc.raw+`"/></Patient>`))
+			if err != nil {
+				t.Fatalf("FromXML: %v", err)
+			}
+			data, err := node.MarshalJSON()
+			if err != nil {
+				t.Fatal(err)
+			}
+			var doc struct {
+				Active json.RawMessage `json:"active"`
+			}
+			if err := json.Unmarshal(data, &doc); err != nil {
+				t.Fatal(err)
+			}
+			if got := string(doc.Active); got != tc.want {
+				t.Errorf("active = %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
 // A transaction bundle rewrites references between its entries, and finding
 // them structurally -- any JSON key named "reference" -- is wrong: several
 // elements across R4 and R5 are named that and hold plain URIs. Rewriting one
