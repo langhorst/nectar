@@ -142,8 +142,10 @@ func elementToMap(idx *conformance.Index, def *conformance.TypeDef, path string,
 
 		isArray := step.Element != nil && step.Element.IsArray()
 		if isArray {
+			// An occurrence without a value stays as a null, which keeps the
+			// array aligned with its "_name" sidecar.
 			obj[name] = values
-		} else {
+		} else if values[0] != nil {
 			obj[name] = values[0]
 		}
 
@@ -181,9 +183,16 @@ func xmlValue(idx *conformance.Index, el *xmlElement, childType string, childDef
 		return map[string]any{}
 	}
 
-	// A primitive with no element children is just its value attribute.
+	// A primitive's value is its value attribute. Without one it has no value
+	// at all -- it carries only an id or extensions, a data-absent-reason
+	// being the usual case -- which the JSON shape expresses by leaving the
+	// element out and keeping its "_name" sidecar.
 	if isPrimitiveType(idx, childType) {
-		return primitiveFromAttr(childType, el.attrs["value"])
+		raw, present := el.attrs["value"]
+		if !present {
+			return nil
+		}
+		return primitiveFromAttr(childType, raw)
 	}
 
 	if childDef == nil {
@@ -197,16 +206,15 @@ func isPrimitiveType(idx *conformance.Index, name string) bool {
 	return ok && def.Kind == "primitive-type"
 }
 
-// primitiveFromAttr converts a value attribute to the representation the JSON
-// reader would have produced, so numbers and booleans are not left as strings.
+// primitiveFromAttr converts a value attribute that is present to the
+// representation the JSON reader would have produced, so numbers and booleans
+// are not left as strings. Text that is not a valid number, an empty attribute
+// included, is kept as written for validation to report.
 func primitiveFromAttr(fhirType, raw string) any {
 	switch fhirType {
 	case "boolean":
 		return raw == "true"
 	case "integer", "positiveInt", "unsignedInt", "decimal":
-		if raw == "" {
-			return nil
-		}
 		if !jsonNumberPattern.MatchString(raw) {
 			// Kept as written, as the JSON reader keeps "value": "1.0.0", so
 			// validation reports it. As a jsonNumber it would be written into

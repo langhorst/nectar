@@ -74,6 +74,38 @@ func TestDeepDocumentsAreRefused(t *testing.T) {
 	c.expect(http.StatusOK, "GET", "/_history", "")
 }
 
+// A data-absent-reason sent as XML is an element with an extension and no
+// value attribute. It used to be stored with an invented value -- "" for a
+// date, false for a boolean -- and a value-less primitive stored from JSON
+// disappeared from XML responses, extension and all.
+func TestValuelessPrimitivesSurviveXML(t *testing.T) {
+	c := newServer(t)
+	const absent = `<extension url="http://hl7.org/fhir/StructureDefinition/data-absent-reason">` +
+		`<valueCode value="unknown"/></extension>`
+	resp := c.expect(http.StatusCreated, "POST", "/Patient",
+		`<Patient xmlns="http://hl7.org/fhir"><active>`+absent+`</active>`+
+			`<birthDate>`+absent+`</birthDate></Patient>`,
+		"Content-Type", "application/fhir+xml")
+	path := pathOf(t, resp.headers.Get("Location"))
+
+	stored := c.expect(http.StatusOK, "GET", path, "").json(t)
+	for _, element := range []string{"active", "birthDate"} {
+		if v, present := stored[element]; present {
+			t.Errorf("%s was stored with the value %#v; it has none", element, v)
+		}
+		if _, present := stored["_"+element]; !present {
+			t.Errorf("%s lost its data-absent-reason", element)
+		}
+	}
+
+	xml := string(c.expect(http.StatusOK, "GET", path, "", "Accept", "application/fhir+xml").body)
+	for _, want := range []string{"<active>" + absent + "</active>", "<birthDate>" + absent + "</birthDate>"} {
+		if !strings.Contains(xml, want) {
+			t.Errorf("XML response is missing %s\n%s", want, xml)
+		}
+	}
+}
+
 // An XML number that is not a number once went into the stored JSON as a
 // number token, so the stored document no longer parsed and every later search
 // of the type failed. It is now kept as text, as the JSON reader keeps it, and

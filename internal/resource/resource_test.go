@@ -182,16 +182,26 @@ func TestPrimitiveExtensions(t *testing.T) {
 }
 
 // A primitive present only as extensions has no value, and behaves as empty
-// rather than as an error.
+// rather than as an error -- in either format. XML spells it as an element
+// with no value attribute, and the reader must not invent one.
 func TestPrimitiveWithoutValue(t *testing.T) {
-	node := fromJSON(t, `{
+	jsonDoc := `{
 	  "resourceType": "Patient",
 	  "name": [{"_family": {"extension": [{"url": "http://example.com/x", "valueString": "y"}]}}]
-	}`)
-	assertEqual(t, "family exists", eval(t, node, "Patient.name.family.exists()"), []string{"true"})
-	assertEqual(t, "hasValue", eval(t, node, "Patient.name.family.hasValue()"), []string{"false"})
-	// String functions see nothing there rather than failing.
-	assertEqual(t, "length", eval(t, node, "Patient.name.family.length()"), nil)
+	}`
+	xmlDoc := `<Patient xmlns="http://hl7.org/fhir"><name><family>
+	  <extension url="http://example.com/x"><valueString value="y"/></extension>
+	</family></name></Patient>`
+
+	for name, node := range map[string]*resource.Node{"json": fromJSON(t, jsonDoc), "xml": fromXML(t, xmlDoc)} {
+		t.Run(name, func(t *testing.T) {
+			assertEqual(t, "family exists", eval(t, node, "Patient.name.family.exists()"), []string{"true"})
+			assertEqual(t, "hasValue", eval(t, node, "Patient.name.family.hasValue()"), []string{"false"})
+			assertEqual(t, "extension", eval(t, node, "Patient.name.family.extension.value"), []string{"y"})
+			// String functions see nothing there rather than failing.
+			assertEqual(t, "length", eval(t, node, "Patient.name.family.length()"), nil)
+		})
+	}
 }
 
 // Recursive structures are defined by contentReference. Both readers must
