@@ -296,6 +296,14 @@ func (s *Store) writeIn(ctx context.Context, tx Querier, node *resource.Node, if
 	if err != nil {
 		return false, nil, fmt.Errorf("storage: serializing resource: %w", err)
 	}
+	// What is stored has to read back. A row the reader refuses fails every
+	// search and history request that touches it, and its history entry could
+	// never be removed. The readers are meant to make that impossible, so this
+	// is a backstop rather than validation: one parse per write, against a
+	// failure that is otherwise permanent.
+	if _, err := resource.FromJSON(s.idx, content); err != nil {
+		return false, nil, fmt.Errorf("storage: refusing to store a resource that would not read back: %w", err)
+	}
 
 	micros := updated.UnixMicro()
 	if created {
